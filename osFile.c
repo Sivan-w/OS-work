@@ -58,6 +58,7 @@ void choose_user();									//选择用户，并检测用户名是否存在
 void add_user_file(User_file* file);				//新增用户文件
 void add_active_file(Active_file* file);			//新增打开文件
 void add_record(Active_file* file, Record* record); //新增记录
+void modify_record();								//修改记录
 User_file* find_user_file(char* filename);			//查找文件是否存在
 Active_file* find_active_file(char* filename);		//查找文件是否打开
 void rename_file();
@@ -110,7 +111,9 @@ int main()
 		case 10:
 			rename_file();
 			break;
-		
+		case 11:
+			modify_record();
+			break;		
 		case 0:
 			exit(EXIT_SUCCESS);
 			break;
@@ -197,7 +200,7 @@ void show_menu()
 = 1--新建文件\t2--打开文件\t3--删除文件 =\n\
 = 4--关闭文件\t5--读取文件\t6--写入文件 =\n\
 = 7--显示目录\t8--显示文件\t9--关闭用户 =\n\
-= 10-重命名   =\n\
+= 10-重命名\t11-修改文件   =\n\
 = \t\t 0--退出\t\t    =\n\
 =============================================\n");
 }
@@ -652,3 +655,219 @@ void rename_file() {
 	strcpy(user_file->name, filename);
 	printf("\n-- 修改完成！ --\n");
 }
+
+
+void modify_record()
+{
+	char name[MAX_NAME_LENGTH];
+	Active_file* active_file;
+	Record* record, * p;
+	int num;
+	int gender;
+
+	printf("\n输入你要读取的文件名(输入数字0返回): ");
+	do
+	{
+		gets(name);
+	} while (!name[0]);
+	if (!strcmp(name, "0"))
+		return;
+
+	if ((active_file = find_active_file(name)) == NULL)
+	{
+		printf("\n-- 文件未打开! --\n");
+		read_file();
+		return; //存在则重新输入
+	}
+	printf("\n输入记录号: ");
+	scanf("%d", &num);
+
+	//查找记录号
+	p = active_file->r_head;
+	for (int i = 0; i < num; i++)
+	{
+		if (p == NULL)
+		{
+			printf("\n-- 没有找到记录 --\n");
+			read_file();
+			return;
+		}
+		p = p->next;
+	}
+	printf("\n\
+\t记录号  \t姓名\t性别\n\
+\t-----------------------------\n\
+\t%d\t\t%s\t%s\n\
+\t-----------------------------\n",
+num, p->name, p->sex);
+
+	record = (Record*)malloc(sizeof(Record));
+	printf("\n输入姓名: ");
+	do
+	{
+		gets(record->name);
+	} while (!record->name[0]);
+
+	while (1)
+	{
+		printf("\n输入性别(1-男/2-女): ");
+		scanf("%d", &gender);
+		if (gender == 1)
+		{
+			strcpy(record->sex, "男");
+			break;
+		}
+		else if (gender == 2)
+		{
+			strcpy(record->sex, "女");
+			break;
+		}
+		else
+		{
+			printf("\n-- 输入格式有误！ --\n");
+		}
+	}
+	//将record复制到p
+	strcpy(p->name, record->name);
+	strcpy(p->sex, record->sex);
+	//active_file->flag = true;
+	printf("\n-- 修改成功 --\n");
+}
+
+
+//void copy_file()
+//{
+//	char username[MAX_NAME_LENGTH], filename[MAX_NAME_LENGTH];
+//	User_file* user_file, * cur, * prev, * file;
+//	int source_user = now_user;
+//	printf("\n输入要复制的文件名(输入数字0返回): ");
+//	do
+//	{ //防止输入空白名
+//		gets(filename);
+//	} while (!filename[0]);
+//	if (!strcmp(filename, "0"))
+//		return;
+//	//检测文件是否已打开
+//	if (find_active_file(filename) != NULL)
+//	{
+//		close_file1(filename); //关闭文件
+//	}
+//	if (mfd[now_user].ufd_head->next == NULL) //只有一个用户文件
+//	{
+//		user_file = mfd[now_user].ufd_head;
+//	}
+//	else
+//	{ //不止一个文件
+//		//找到节点位置
+//		for (prev = cur = mfd[now_user].ufd_head; cur != NULL && strcmp(cur->name, filename) != 0; prev = cur, cur = cur->next)
+//			;
+//		user_file = cur;
+//	}
+//	//检测文件名是否存在
+//	if (find_user_file(filename) == NULL)
+//	{
+//		printf("\n-- 文件不存在! --\n");
+//		copy_file();
+//		return; //存在则重新输入
+//	}
+//	display_root();
+//	printf("\n输入要复制到的用户名(输入数字0返回): ");
+//	do
+//	{ //防止输入空白名
+//		gets(username);
+//	} while (!username[0]);
+//	int i;
+//	for (i = 0; i < user_num; i++)
+//	{ //遍历寻找该用户
+//		if (!strcmp(username, mfd[i].username))
+//		{
+//			now_user = i;
+//			break;
+//		}
+//	}
+//	if (i == user_num)
+//	{
+//		printf("\n-- 没有找到用户！ --\n");
+//		return;
+//	}
+//
+//	file = (User_file*)malloc(sizeof(User_file));
+//
+//	strcpy(file->name, user_file->name);
+//	file->length = user_file->length;
+//	file->r_head = user_file->r_head;
+//	file->next = NULL;
+//	add_user_file(file);//加入到ufd中 
+//	printf("\n-- 完成！ --\n");
+//	now_user = source_user;
+//
+//}
+//
+//void move_file()
+//{
+//	char username[MAX_NAME_LENGTH], filename[MAX_NAME_LENGTH];
+//	User_file* user_file, * cur, * prev;
+//	int source_user = now_user;
+//	printf("\n输入要移动的文件名(输入数字0返回): ");
+//	do
+//	{ //防止输入空白名
+//		gets(filename);
+//	} while (!filename[0]);
+//	if (!strcmp(filename, "0"))
+//		return;
+//
+//	//检测文件是否已打开
+//	if (find_active_file(filename) != NULL)
+//	{
+//		close_file1(filename); //关闭文件
+//	}
+//
+//	//检测文件名是否存在
+//	if (find_user_file(filename) == NULL)
+//	{
+//		printf("\n-- 文件不存在! --\n");
+//		move_file();
+//		return; //存在则重新输入
+//	}
+//
+//	//从ufd中删除
+//	if (mfd[now_user].ufd_head->next == NULL) //只有一个用户文件
+//	{
+//		user_file = mfd[now_user].ufd_head;
+//		mfd[now_user].ufd_head = NULL;
+//	}
+//	else
+//	{ //不止一个文件
+//		//找到节点位置
+//		for (prev = cur = mfd[now_user].ufd_head; cur != NULL && strcmp(cur->name, filename) != 0; prev = cur, cur = cur->next)
+//			;
+//		user_file = cur;
+//		prev->next = cur->next;
+//	}
+//
+//	display_root();
+//	printf("\n输入要移动到的用户名(输入数字0返回): ");
+//	do
+//	{ //防止输入空白名
+//		gets(username);
+//	} while (!username[0]);
+//	int i;
+//	for (i = 0; i < user_num; i++)
+//	{ //遍历寻找该用户
+//		if (!strcmp(username, mfd[i].username))
+//		{
+//			now_user = i;
+//			break;
+//		}
+//	}
+//	if (i == user_num)
+//	{
+//		printf("\n-- 没有找到用户！ --\n");
+//		return;
+//	}
+//
+//	add_user_file(user_file);
+//	printf("\n-- 移动完成！ --\n");
+//	now_user = source_user;
+//
+//}
